@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rishabh Singh - Portfolio</title>
+    <!-- Importing Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;700&family=Playfair+Display:ital,wght@1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-primary: #f8fafc;
+            --accent-1: #38bdf8;
+            --accent-2: #818cf8;
+            --accent-3: #c084fc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient Background Glow */
+        .glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            animation: pulse 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        .container {
+            text-align: center;
+            z-index: 10;
+            padding: 2rem;
+            backdrop-filter: blur(5px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 90%;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Stylish Name */
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 5rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+            
+            /* Gradient Text Magic */
+            background: linear-gradient(
+                to right, 
+                var(--accent-1), 
+                var(--accent-2), 
+                var(--accent-3), 
+                var(--accent-1)
+            );
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            
+            animation: shine 5s linear infinite;
+            cursor: default;
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeUp 1s ease forwards 0.5s;
+        }
+
+        .tagline-dynamic {
+            color: var(--accent-1);
+            font-weight: 700;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 32px;
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50px;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeUp 1s ease forwards 0.8s;
+        }
+
+        .btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--accent-2);
+            box-shadow: 0 0 15px rgba(129, 140, 248, 0.3);
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3rem;
+            }
+            .subtitle {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Decorative background element -->
+    <div class="glow"></div>
+
+    <div class="container">
+        <h1 id="main-name">Rishabh Singh</h1>
+        <p class="subtitle">Creative <span class="tagline-dynamic" id="dynamic-text">Developer</span></p>
+        <button class="btn" onclick="toggleTheme()">Get in Touch</button>
+    </div>
+
+    <script>
+        // Dynamic Text Typing Effect
+        const words = ["Developer", "Designer", "Innovator", "Visionary"];
+        let i = 0;
+        let timer;
+
+        function typeWriter() {
+            const dynamicText = document.getElementById('dynamic-text');
+            // Simply cycling through words for this demo
+            i = (i + 1) % words.length;
+            
+            // Fade out
+            dynamicText.style.opacity = 0;
+            
+            setTimeout(() => {
+                dynamicText.textContent = words[i];
+                // Fade in
+                dynamicText.style.opacity = 1;
+            }, 500); // Wait for fade out
+        }
+
+        // Change word every 3 seconds
+        setInterval(typeWriter, 3000);
+
+        // Add subtle parallax effect to the name on mouse move
+        const container = document.querySelector('.container');
+        const name = document.getElementById('main-name');
+
+        document.addEventListener('mousemove', (e) => {
+            const x = (window.innerWidth / 2 - e.pageX) / 25;
+            const y = (window.innerHeight / 2 - e.pageY) / 25;
+
+            name.style.transform = `translateX(${x}px) translateY(${y}px)`;
+        });
+
+        // Simple button interaction
+        function toggleTheme() {
+            const btn = document.querySelector('.btn');
+            btn.textContent = "Welcome, Rishabh!";
+            btn.style.borderColor = "#38bdf8";
+            btn.style.color = "#38bdf8";
+        }
+
+        // Add CSS transition for opacity for the JS animation
+        document.getElementById('dynamic-text').style.transition = "opacity 0.5s ease";
+    </script>
+</body>
+</html>
