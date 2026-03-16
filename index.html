@@ -4,15 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rishabh Singh - Portfolio</title>
-    <!-- Importing Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;700&family=Playfair+Display:ital,wght@1,400&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-color: #0f172a;
-            --text-primary: #f8fafc;
+            --bg-color: #060d1f;
+            --text-primary: #f0f6ff;
             --accent-1: #38bdf8;
             --accent-2: #818cf8;
             --accent-3: #c084fc;
@@ -34,82 +33,224 @@
             align-items: center;
             overflow: hidden;
             position: relative;
+            cursor: none;
+            perspective: 1200px;
         }
 
-        /* Ambient Background Glow */
-        .glow {
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0) 70%);
+        /* Custom cursor */
+        #cursor {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-1);
             border-radius: 50%;
             pointer-events: none;
-            z-index: 0;
-            animation: pulse 8s ease-in-out infinite alternate;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background 0.2s;
+            mix-blend-mode: screen;
+        }
+        #cursor-ring {
+            position: fixed;
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: transform 0.08s linear, width 0.2s, height 0.2s, border-color 0.2s;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.5; }
-            100% { transform: scale(1.2); opacity: 0.8; }
+        /* Full screen 3D canvas */
+        #particle-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+        }
+
+        /* Vignette overlay */
+        .vignette {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(6,13,31,0.75) 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Grid lines */
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(56,189,248,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56,189,248,0.025) 1px, transparent 1px);
+            background-size: 60px 60px;
         }
 
         .container {
             text-align: center;
             z-index: 10;
-            padding: 2rem;
-            backdrop-filter: blur(5px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            background: rgba(255, 255, 255, 0.03);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 3.5rem 4rem;
+            border-radius: 32px;
             max-width: 90%;
-            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s ease;
+
+            /* Glass core */
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.10) 0%,
+                rgba(255, 255, 255, 0.04) 50%,
+                rgba(56, 189, 248, 0.05) 100%
+            );
+            backdrop-filter: blur(24px) saturate(160%);
+            -webkit-backdrop-filter: blur(24px) saturate(160%);
+
+            /* Layered borders for glass edge illusion */
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow:
+                /* outer glow */
+                0 0 0 1px rgba(56, 189, 248, 0.08),
+                /* depth shadow */
+                0 32px 80px -16px rgba(0, 0, 0, 0.75),
+                0 8px 32px -8px rgba(0, 0, 0, 0.5),
+                /* inner top highlight */
+                inset 0 1.5px 0 rgba(255, 255, 255, 0.22),
+                /* inner bottom shadow */
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+                /* inner left highlight */
+                inset 1px 0 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Frosted glass shine sweep */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -60%;
+            width: 55%; height: 100%;
+            background: linear-gradient(
+                105deg,
+                transparent 30%,
+                rgba(255, 255, 255, 0.055) 50%,
+                transparent 70%
+            );
+            transform: skewX(-15deg);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Bottom-right tinted reflection */
+        .container::after {
+            content: '';
+            position: absolute;
+            bottom: 0; right: 0;
+            width: 60%; height: 50%;
+            background: radial-gradient(
+                ellipse at bottom right,
+                rgba(56, 189, 248, 0.07) 0%,
+                rgba(129, 140, 248, 0.04) 40%,
+                transparent 70%
+            );
+            border-radius: 0 0 32px 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Ensure content sits above pseudo-elements */
+        .container > * {
+            position: relative;
+            z-index: 1;
         }
 
         .container:hover {
-            transform: translateY(-5px);
-            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-8px) scale(1.01);
+            box-shadow:
+                0 0 0 1px rgba(56, 189, 248, 0.15),
+                0 48px 100px -20px rgba(0, 0, 0, 0.8),
+                0 16px 40px -10px rgba(0, 0, 0, 0.5),
+                0 0 80px -20px rgba(56, 189, 248, 0.12),
+                inset 0 1.5px 0 rgba(255, 255, 255, 0.28),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+                inset 1px 0 0 rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.26);
         }
 
-        /* Stylish Name */
+        /* HUD tag */
+        .hud-tag {
+            font-size: 0.65rem;
+            letter-spacing: 4px;
+            color: rgba(56,189,248,0.4);
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            font-family: 'Outfit', monospace;
+            opacity: 0;
+            animation: fadeUp 1s ease forwards 0.2s;
+        }
+
         h1 {
             font-family: 'Playfair Display', serif;
             font-size: 5rem;
             font-weight: 800;
             letter-spacing: -2px;
-            line-height: 1.1;
-            margin-bottom: 0.5rem;
-            
-            /* Gradient Text Magic */
-            background: linear-gradient(
-                to right, 
-                var(--accent-1), 
-                var(--accent-2), 
-                var(--accent-3), 
-                var(--accent-1)
-            );
-            background-size: 300% auto;
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            
-            animation: shine 5s linear infinite;
+            line-height: 1.05;
+            margin-bottom: 0.6rem;
+            color: #ffffff;
             cursor: default;
+            will-change: transform;
+            text-shadow:
+                /* crisp white base always readable */
+                0 0 0px #fff,
+                /* soft cyan aura */
+                0 0 20px rgba(56, 189, 248, 0.6),
+                /* wider violet bloom */
+                0 0 50px rgba(129, 140, 248, 0.35),
+                /* deep purple halo for depth */
+                0 0 90px rgba(192, 132, 252, 0.2),
+                /* subtle dark offset for contrast on light bg */
+                1px 2px 8px rgba(0, 0, 0, 0.5);
+            animation: nameGlow 6s ease-in-out infinite alternate;
         }
 
-        @keyframes shine {
-            to {
-                background-position: 200% center;
+        @keyframes nameGlow {
+            0%   {
+                text-shadow:
+                    0 0 0px #fff,
+                    0 0 20px rgba(56, 189, 248, 0.7),
+                    0 0 50px rgba(129, 140, 248, 0.4),
+                    0 0 90px rgba(192, 132, 252, 0.25),
+                    1px 2px 8px rgba(0,0,0,0.5);
+            }
+            50%  {
+                text-shadow:
+                    0 0 0px #fff,
+                    0 0 24px rgba(192, 132, 252, 0.7),
+                    0 0 55px rgba(56, 189, 248, 0.35),
+                    0 0 100px rgba(129, 140, 248, 0.2),
+                    1px 2px 8px rgba(0,0,0,0.5);
+            }
+            100% {
+                text-shadow:
+                    0 0 0px #fff,
+                    0 0 22px rgba(129, 140, 248, 0.7),
+                    0 0 50px rgba(192, 132, 252, 0.4),
+                    0 0 90px rgba(56, 189, 248, 0.2),
+                    1px 2px 8px rgba(0,0,0,0.5);
             }
         }
 
         .subtitle {
-            font-size: 1.25rem;
-            color: #94a3b8;
+            font-size: 1.1rem;
+            color: #7a90b0;
             font-weight: 300;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
             opacity: 0;
             animation: fadeUp 1s ease forwards 0.5s;
         }
@@ -117,107 +258,436 @@
         .tagline-dynamic {
             color: var(--accent-1);
             font-weight: 700;
+            transition: opacity 0.4s ease;
+        }
+
+        /* Divider line */
+        .divider {
+            width: 40px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(56,189,248,0.5), transparent);
+            margin: 0 auto 2.5rem;
+            opacity: 0;
+            animation: fadeUp 1s ease forwards 0.65s;
         }
 
         .btn {
             display: inline-block;
-            padding: 12px 32px;
-            background: transparent;
-            color: var(--text-primary);
-            border: 1px solid rgba(255,255,255,0.2);
+            padding: 13px 36px;
+            color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255, 255, 255, 0.22);
             border-radius: 50px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
             text-decoration: none;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+            cursor: none;
             opacity: 0;
             animation: fadeUp 1s ease forwards 0.8s;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 300;
+            position: relative;
+            overflow: hidden;
+
+            /* Glass button */
+            background: linear-gradient(
+                135deg,
+                rgba(255,255,255,0.12) 0%,
+                rgba(255,255,255,0.04) 100%
+            );
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.2),
+                inset 0 -1px 0 rgba(0,0,0,0.1),
+                0 4px 16px rgba(0,0,0,0.25);
         }
 
+        /* shimmer on hover */
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -75%;
+            width: 50%; height: 100%;
+            background: linear-gradient(
+                105deg,
+                transparent 30%,
+                rgba(255,255,255,0.12) 50%,
+                transparent 70%
+            );
+            transform: skewX(-15deg);
+            transition: left 0.45s ease;
+        }
+
+        .btn:hover::before { left: 130%; }
+
         .btn:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: var(--accent-2);
-            box-shadow: 0 0 15px rgba(129, 140, 248, 0.3);
+            border-color: rgba(56, 189, 248, 0.5);
+            background: linear-gradient(
+                135deg,
+                rgba(56,189,248,0.18) 0%,
+                rgba(129,140,248,0.1) 100%
+            );
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.25),
+                inset 0 -1px 0 rgba(0,0,0,0.1),
+                0 0 24px rgba(56,189,248,0.25),
+                0 8px 24px rgba(0,0,0,0.3);
+            letter-spacing: 3px;
+            color: #fff;
         }
 
         @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Mobile Responsiveness */
+        /* Floating orbs behind card */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+            filter: blur(60px);
+            animation: orbFloat 12s ease-in-out infinite alternate;
+        }
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(56,189,248,0.07) 0%, transparent 70%);
+            top: -100px; left: -100px;
+            animation-duration: 14s;
+        }
+        .orb-2 {
+            width: 350px; height: 350px;
+            background: radial-gradient(circle, rgba(192,132,252,0.07) 0%, transparent 70%);
+            bottom: -80px; right: -80px;
+            animation-duration: 10s;
+            animation-delay: -5s;
+        }
+        .orb-3 {
+            width: 250px; height: 250px;
+            background: radial-gradient(circle, rgba(129,140,248,0.05) 0%, transparent 70%);
+            top: 50%; left: 50%;
+            transform: translate(-50%,-50%);
+            animation-duration: 18s;
+            animation-delay: -3s;
+        }
+        @keyframes orbFloat {
+            0%   { transform: translate(0,0) scale(1); }
+            100% { transform: translate(40px, 30px) scale(1.15); }
+        }
+
         @media (max-width: 768px) {
-            h1 {
-                font-size: 3rem;
-            }
-            .subtitle {
-                font-size: 1rem;
-            }
+            h1 { font-size: 3rem; }
+            .subtitle { font-size: 0.9rem; }
+            .container { padding: 2rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Decorative background element -->
-    <div class="glow"></div>
+    <div id="cursor"></div>
+    <div id="cursor-ring"></div>
 
-    <div class="container">
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="vignette"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="container" id="card">
+        <div class="hud-tag">portfolio · 2025</div>
         <h1 id="main-name">Rishabh Singh</h1>
         <p class="subtitle">Creative <span class="tagline-dynamic" id="dynamic-text">Developer</span></p>
-        <button class="btn" onclick="toggleTheme()">Get in Touch</button>
+        <div class="divider"></div>
+        <button class="btn" id="cta-btn">Get in Touch</button>
     </div>
 
     <script>
-        // Dynamic Text Typing Effect
-        const words = ["Developer", "Designer", "Innovator", "Visionary"];
-        let i = 0;
-        let timer;
+    /* ── CUSTOM CURSOR ── */
+    const cursor = document.getElementById('cursor');
+    const cursorRing = document.getElementById('cursor-ring');
+    let cx = -100, cy = -100, rx = -100, ry = -100;
 
-        function typeWriter() {
-            const dynamicText = document.getElementById('dynamic-text');
-            // Simply cycling through words for this demo
-            i = (i + 1) % words.length;
-            
-            // Fade out
-            dynamicText.style.opacity = 0;
-            
-            setTimeout(() => {
-                dynamicText.textContent = words[i];
-                // Fade in
-                dynamicText.style.opacity = 1;
-            }, 500); // Wait for fade out
-        }
+    document.addEventListener('mousemove', e => { cx = e.clientX; cy = e.clientY; });
 
-        // Change word every 3 seconds
-        setInterval(typeWriter, 3000);
+    (function animateCursor() {
+        rx += (cx - rx) * 0.12;
+        ry += (cy - ry) * 0.12;
+        cursor.style.left = cx + 'px';
+        cursor.style.top  = cy + 'px';
+        cursorRing.style.left = rx + 'px';
+        cursorRing.style.top  = ry + 'px';
+        requestAnimationFrame(animateCursor);
+    })();
 
-        // Add subtle parallax effect to the name on mouse move
-        const container = document.querySelector('.container');
-        const name = document.getElementById('main-name');
-
-        document.addEventListener('mousemove', (e) => {
-            const x = (window.innerWidth / 2 - e.pageX) / 25;
-            const y = (window.innerHeight / 2 - e.pageY) / 25;
-
-            name.style.transform = `translateX(${x}px) translateY(${y}px)`;
+    document.querySelectorAll('button, a').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            cursor.style.width = '16px';
+            cursor.style.height = '16px';
+            cursor.style.background = 'var(--accent-3)';
+            cursorRing.style.width = '50px';
+            cursorRing.style.height = '50px';
+            cursorRing.style.borderColor = 'rgba(192,132,252,0.5)';
         });
+        el.addEventListener('mouseleave', () => {
+            cursor.style.width = '10px';
+            cursor.style.height = '10px';
+            cursor.style.background = 'var(--accent-1)';
+            cursorRing.style.width = '36px';
+            cursorRing.style.height = '36px';
+            cursorRing.style.borderColor = 'rgba(56,189,248,0.4)';
+        });
+    });
 
-        // Simple button interaction
-        function toggleTheme() {
-            const btn = document.querySelector('.btn');
-            btn.textContent = "Welcome, Rishabh!";
-            btn.style.borderColor = "#38bdf8";
-            btn.style.color = "#38bdf8";
+    /* ── 3D PARTICLE NETWORK ── */
+    const cv = document.getElementById('particle-canvas');
+    const ctx = cv.getContext('2d');
+    let W, H, pts = [];
+    let rotX = 0.25, rotY = 0.4, velX = 0, velY = 0;
+    let dragging = false, lx = 0, ly = 0;
+
+    const PALETTE = [
+        [0, 200, 255], [80, 140, 255], [0, 255, 200],
+        [120, 80, 255], [56, 189, 248]
+    ];
+
+    function resize() {
+        W = window.innerWidth; H = window.innerHeight;
+        cv.width  = W * devicePixelRatio;
+        cv.height = H * devicePixelRatio;
+        cv.style.width  = W + 'px';
+        cv.style.height = H + 'px';
+        ctx.scale(devicePixelRatio, devicePixelRatio);
+    }
+
+    function initParticles() {
+        pts = [];
+        const n = Math.min(130, Math.floor(W * H / 8000));
+        for (let i = 0; i < n; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi   = Math.acos(2 * Math.random() - 1);
+            const r     = 0.2 + Math.random() * 0.9;
+            pts.push({
+                ox: r * Math.sin(phi) * Math.cos(theta),
+                oy: r * Math.sin(phi) * Math.sin(theta),
+                oz: r * Math.cos(phi),
+                sz: 1.2 + Math.random() * 2.4,
+                phase:     Math.random() * Math.PI * 2,
+                phaseSpd:  0.008 + Math.random() * 0.018,
+                col: PALETTE[Math.floor(Math.random() * PALETTE.length)]
+            });
+        }
+    }
+
+    function project(x, y, z) {
+        const fov = Math.min(W, H) * 0.65;
+        const cx2 = Math.cos(rotX), sx2 = Math.sin(rotX);
+        const cy2 = Math.cos(rotY), sy2 = Math.sin(rotY);
+        let tx  = cy2 * x + sy2 * z;
+        let tz  = -sy2 * x + cy2 * z;
+        let ty  = cx2 * y - sx2 * tz;
+        let tz2 = sx2 * y + cx2 * tz;
+        const sc = fov / (fov + tz2 * 120 + 200);
+        return { sx: W / 2 + tx * fov * sc, sy: H / 2 + ty * fov * sc, depth: tz2, sc };
+    }
+
+    let bgPhase = 0;
+    function draw() {
+        bgPhase += 0.002;
+        ctx.clearRect(0, 0, W, H);
+
+        /* deep background */
+        const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.8);
+        bg.addColorStop(0, 'rgba(8,16,38,1)');
+        bg.addColorStop(1, 'rgba(4,8,20,1)');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        /* drifting nebula */
+        const nx = W*0.35 + Math.sin(bgPhase)*60;
+        const ny = H*0.4  + Math.cos(bgPhase*0.7)*40;
+        const neb = ctx.createRadialGradient(nx, ny, 0, W/2, H/2, W*0.65);
+        neb.addColorStop(0,   'rgba(0,100,220,0.06)');
+        neb.addColorStop(0.5, 'rgba(0,180,255,0.03)');
+        neb.addColorStop(1,   'transparent');
+        ctx.fillStyle = neb;
+        ctx.fillRect(0, 0, W, H);
+
+        const proj = pts
+            .map(p => ({ ...p, ...project(p.ox, p.oy, p.oz) }))
+            .sort((a, b) => a.depth - b.depth);
+
+        const maxDist = 0.48;
+
+        /* edges */
+        for (let i = 0; i < proj.length; i++) {
+            for (let j = i + 1; j < proj.length; j++) {
+                const a = proj[i], b = proj[j];
+                const dx = a.ox - b.ox, dy = a.oy - b.oy, dz = a.oz - b.oz;
+                const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                if (dist < maxDist) {
+                    const t = 1 - dist / maxDist;
+                    const alpha = t * t * 0.5;
+                    const grad = ctx.createLinearGradient(a.sx, a.sy, b.sx, b.sy);
+                    grad.addColorStop(0, `rgba(${a.col[0]},${a.col[1]},${a.col[2]},${alpha})`);
+                    grad.addColorStop(1, `rgba(${b.col[0]},${b.col[1]},${b.col[2]},${alpha})`);
+                    ctx.beginPath();
+                    ctx.moveTo(a.sx, a.sy);
+                    ctx.lineTo(b.sx, b.sy);
+                    ctx.strokeStyle = grad;
+                    ctx.lineWidth = t * 0.9;
+                    ctx.stroke();
+
+                    /* glow edge */
+                    if (t > 0.55) {
+                        const mc = `rgba(${(a.col[0]+b.col[0])>>1},${(a.col[1]+b.col[1])>>1},${(a.col[2]+b.col[2])>>1},${t*0.1})`;
+                        ctx.beginPath();
+                        ctx.moveTo(a.sx, a.sy);
+                        ctx.lineTo(b.sx, b.sy);
+                        ctx.strokeStyle = mc;
+                        ctx.lineWidth = t * 3;
+                        ctx.stroke();
+                    }
+                }
+            }
         }
 
-        // Add CSS transition for opacity for the JS animation
-        document.getElementById('dynamic-text').style.transition = "opacity 0.5s ease";
+        /* nodes */
+        for (const p of proj) {
+            p.phase += p.phaseSpd;
+            const pulse    = 0.78 + 0.22 * Math.sin(p.phase);
+            const depth01  = (p.depth + 1) / 2;
+            const baseAlpha = 0.5 + depth01 * 0.5;
+            const r = Math.max(0.8, p.sz * p.sc * 72 * pulse);
+
+            /* outer halo */
+            const ring = ctx.createRadialGradient(p.sx, p.sy, 0, p.sx, p.sy, r * 4.5);
+            ring.addColorStop(0, `rgba(${p.col[0]},${p.col[1]},${p.col[2]},${0.15 * pulse})`);
+            ring.addColorStop(1, 'transparent');
+            ctx.beginPath();
+            ctx.arc(p.sx, p.sy, r * 4.5, 0, Math.PI * 2);
+            ctx.fillStyle = ring;
+            ctx.fill();
+
+            /* core */
+            const core = ctx.createRadialGradient(p.sx - r*0.3, p.sy - r*0.3, 0, p.sx, p.sy, r);
+            core.addColorStop(0, `rgba(255,255,255,${baseAlpha * 0.9})`);
+            core.addColorStop(0.4, `rgba(${p.col[0]},${p.col[1]},${p.col[2]},${baseAlpha * 0.9})`);
+            core.addColorStop(1, `rgba(${p.col[0]},${p.col[1]},${p.col[2]},0)`);
+            ctx.beginPath();
+            ctx.arc(p.sx, p.sy, r, 0, Math.PI * 2);
+            ctx.fillStyle = core;
+            ctx.fill();
+        }
+
+        /* vignette */
+        const vig = ctx.createRadialGradient(W/2, H/2, H*0.15, W/2, H/2, Math.max(W,H)*0.8);
+        vig.addColorStop(0, 'transparent');
+        vig.addColorStop(1, 'rgba(4,8,20,0.6)');
+        ctx.fillStyle = vig;
+        ctx.fillRect(0, 0, W, H);
+    }
+
+    function loop() {
+        velY += 0.000040;
+        velX *= 0.96;
+        velY *= 0.97;
+        if (!dragging) {
+            rotX += velX;
+            rotY += velY;
+        }
+        draw();
+        requestAnimationFrame(loop);
+    }
+
+    /* drag to rotate */
+    cv.addEventListener('mousedown',  e => { dragging = true;  lx = e.clientX; ly = e.clientY; });
+    cv.addEventListener('mousemove',  e => {
+        if (!dragging) return;
+        velX = (e.clientY - ly) * 0.003;
+        velY = (e.clientX - lx) * 0.003;
+        rotX += velX; rotY += velY;
+        lx = e.clientX; ly = e.clientY;
+    });
+    cv.addEventListener('mouseup',    () => dragging = false);
+    cv.addEventListener('mouseleave', () => dragging = false);
+    cv.addEventListener('touchstart', e => { dragging = true; lx = e.touches[0].clientX; ly = e.touches[0].clientY; }, {passive:true});
+    cv.addEventListener('touchmove',  e => {
+        velX = (e.touches[0].clientY - ly) * 0.003;
+        velY = (e.touches[0].clientX - lx) * 0.003;
+        rotX += velX; rotY += velY;
+        lx = e.touches[0].clientX; ly = e.touches[0].clientY;
+    }, {passive:true});
+    cv.addEventListener('touchend', () => dragging = false);
+
+    window.addEventListener('resize', () => { resize(); initParticles(); });
+
+    resize();
+    initParticles();
+    loop();
+
+    /* ── GLASS CARD 3D TILT ── */
+    const card = document.getElementById('card');
+    let tiltActive = false;
+
+    card.addEventListener('mouseenter', () => {
+        tiltActive = true;
+        card.style.transition = 'box-shadow 0.3s ease';
+    });
+    card.addEventListener('mouseleave', () => {
+        tiltActive = false;
+        card.style.transform = 'translateY(0) rotateX(0deg) rotateY(0deg) scale(1)';
+        card.style.transition = 'transform 0.6s cubic-bezier(0.23,1,0.32,1), box-shadow 0.5s ease';
+    });
+
+    document.addEventListener('mousemove', e => {
+        if (!tiltActive) return;
+        const rect = card.getBoundingClientRect();
+        const cx = rect.left + rect.width  / 2;
+        const cy = rect.top  + rect.height / 2;
+        const dx = (e.clientX - cx) / (rect.width  / 2);
+        const dy = (e.clientY - cy) / (rect.height / 2);
+        const tiltX = -dy * 9;
+        const tiltY =  dx * 9;
+        card.style.transform = `translateY(-8px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(1.015)`;
+        card.style.transition = 'transform 0.08s linear';
+    });
+
+    /* ── DYNAMIC TEXT ── */
+    const words = ["Developer", "Designer", "Innovator", "Visionary"];
+    let wordIndex = 0;
+    const dynamicText = document.getElementById('dynamic-text');
+    dynamicText.style.transition = 'opacity 0.4s ease';
+
+    setInterval(() => {
+        wordIndex = (wordIndex + 1) % words.length;
+        dynamicText.style.opacity = 0;
+        setTimeout(() => {
+            dynamicText.textContent = words[wordIndex];
+            dynamicText.style.opacity = 1;
+        }, 420);
+    }, 3000);
+
+    /* ── PARALLAX NAME on mouse ── */
+    const name = document.getElementById('main-name');
+    document.addEventListener('mousemove', e => {
+        const x = (window.innerWidth  / 2 - e.pageX) / 28;
+        const y = (window.innerHeight / 2 - e.pageY) / 28;
+        name.style.transform = `translateX(${x}px) translateY(${y}px)`;
+    });
+
+    /* ── CTA BUTTON ── */
+    document.getElementById('cta-btn').addEventListener('click', function() {
+        this.textContent = 'Say Hello →';
+        this.style.borderColor = 'var(--accent-1)';
+        this.style.color = 'var(--accent-1)';
+        this.style.letterSpacing = '3px';
+    });
     </script>
 </body>
 </html>
