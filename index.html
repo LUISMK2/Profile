@@ -1,693 +1,557 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rishabh Singh - Portfolio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;700&family=Playfair+Display:ital,wght@1,400&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --bg-color: #060d1f;
-            --text-primary: #f0f6ff;
-            --accent-1: #38bdf8;
-            --accent-2: #818cf8;
-            --accent-3: #c084fc;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Rishabh Singh — Invaders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e17;
+    --panel:#10151f;
+    --line:#2a3140;
+    --ink:#eef2f8;
+    --dim:#6b7688;
+    --cyan:#4fc3f7;
+    --green:#5ee6a0;
+    --red:#f4586b;
+    --amber:#f5c451;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Outfit',sans-serif;
+    height:100%;
+    overflow:hidden;
+  }
+  #stage{
+    position:fixed;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  #frame{
+    position:relative;
+    width:min(96vw, 620px);
+    aspect-ratio: 9 / 13;
+    max-height:94vh;
+    border-radius:8px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    overflow:hidden;
+  }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            font-family: 'Outfit', sans-serif;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            position: relative;
-            cursor: none;
-            perspective: 1200px;
-        }
+  #hud{
+    position:absolute;
+    top:0; left:0; right:0;
+    z-index:4;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding:14px 16px;
+    font-family:'Press Start 2P', monospace;
+    font-size:9px;
+    letter-spacing:0.5px;
+    border-bottom:1px solid var(--line);
+    background:var(--panel);
+  }
+  #hud .col{display:flex;flex-direction:column;gap:8px;}
+  #hud .label{color:var(--dim);margin-bottom:3px;}
+  #hud .val{color:var(--ink);}
+  #hud .val.lives{color:var(--red);}
+  #hud .val.hi{color:var(--amber);}
+  #hud .center{text-align:center;color:var(--dim);}
 
-        /* Custom cursor */
-        #cursor {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            background: var(--accent-1);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 9999;
-            transform: translate(-50%, -50%);
-            transition: width 0.2s, height 0.2s, background 0.2s;
-            mix-blend-mode: screen;
-        }
-        #cursor-ring {
-            position: fixed;
-            width: 36px;
-            height: 36px;
-            border: 1px solid rgba(56, 189, 248, 0.4);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 9998;
-            transform: translate(-50%, -50%);
-            transition: transform 0.08s linear, width 0.2s, height 0.2s, border-color 0.2s;
-        }
+  canvas#game{
+    display:block;
+    width:100%;
+    height:100%;
+    position:relative;
+    z-index:2;
+  }
 
-        /* Full screen 3D canvas */
-        #particle-canvas {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 0;
-        }
+  .overlay{
+    position:absolute;
+    inset:0;
+    z-index:10;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:8% 8%;
+    background:var(--bg);
+    gap:16px;
+  }
+  .overlay.hidden{display:none;}
 
-        /* Vignette overlay */
-        .vignette {
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(ellipse at center, transparent 40%, rgba(6,13,31,0.75) 100%);
-            z-index: 1;
-            pointer-events: none;
-        }
+  .eyebrow{
+    font-size:0.6rem;
+    letter-spacing:3px;
+    color:var(--dim);
+    text-transform:uppercase;
+    font-family:'Outfit',monospace;
+  }
 
-        /* Grid lines */
-        .grid-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-            background-image:
-                linear-gradient(rgba(56,189,248,0.025) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(56,189,248,0.025) 1px, transparent 1px);
-            background-size: 60px 60px;
-        }
+  h1.title{
+    font-family:'Outfit', sans-serif;
+    font-weight:700;
+    font-size:clamp(1.5rem, 7vw, 2.2rem);
+    letter-spacing:-0.5px;
+    color:var(--ink);
+  }
 
-        .container {
-            text-align: center;
-            z-index: 10;
-            padding: 3.5rem 4rem;
-            border-radius: 32px;
-            max-width: 90%;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s ease;
+  .arcade-title{
+    font-family:'Press Start 2P', monospace;
+    font-size:clamp(1rem, 5vw, 1.4rem);
+    color:var(--green);
+    letter-spacing:2px;
+  }
 
-            /* Glass core */
-            background: linear-gradient(
-                135deg,
-                rgba(255, 255, 255, 0.10) 0%,
-                rgba(255, 255, 255, 0.04) 50%,
-                rgba(56, 189, 248, 0.05) 100%
-            );
-            backdrop-filter: blur(24px) saturate(160%);
-            -webkit-backdrop-filter: blur(24px) saturate(160%);
+  .sub{
+    font-size:0.85rem;
+    color:var(--dim);
+    font-weight:300;
+    max-width:320px;
+    line-height:1.6;
+  }
 
-            /* Layered borders for glass edge illusion */
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            box-shadow:
-                /* outer glow */
-                0 0 0 1px rgba(56, 189, 248, 0.08),
-                /* depth shadow */
-                0 32px 80px -16px rgba(0, 0, 0, 0.75),
-                0 8px 32px -8px rgba(0, 0, 0, 0.5),
-                /* inner top highlight */
-                inset 0 1.5px 0 rgba(255, 255, 255, 0.22),
-                /* inner bottom shadow */
-                inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-                /* inner left highlight */
-                inset 1px 0 0 rgba(255, 255, 255, 0.1);
-        }
+  .keys{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:center;
+    font-family:'Press Start 2P', monospace;
+    font-size:8px;
+    color:var(--dim);
+  }
+  .keys span{
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:6px 10px;
+  }
 
-        /* Frosted glass shine sweep */
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -60%;
-            width: 55%; height: 100%;
-            background: linear-gradient(
-                105deg,
-                transparent 30%,
-                rgba(255, 255, 255, 0.055) 50%,
-                transparent 70%
-            );
-            transform: skewX(-15deg);
-            pointer-events: none;
-            z-index: 0;
-        }
+  .btn{
+    font-family:'Press Start 2P', monospace;
+    font-size:11px;
+    letter-spacing:1px;
+    padding:13px 26px;
+    color:var(--bg);
+    border:none;
+    border-radius:4px;
+    background:var(--ink);
+    cursor:pointer;
+  }
+  .btn:hover{ background:var(--cyan); }
 
-        /* Bottom-right tinted reflection */
-        .container::after {
-            content: '';
-            position: absolute;
-            bottom: 0; right: 0;
-            width: 60%; height: 50%;
-            background: radial-gradient(
-                ellipse at bottom right,
-                rgba(56, 189, 248, 0.07) 0%,
-                rgba(129, 140, 248, 0.04) 40%,
-                transparent 70%
-            );
-            border-radius: 0 0 32px 0;
-            pointer-events: none;
-            z-index: 0;
-        }
+  .stat-row{
+    display:flex;
+    gap:26px;
+    font-family:'Press Start 2P', monospace;
+    font-size:9px;
+    color:var(--dim);
+  }
+  .stat-row .stat .n{
+    display:block;
+    font-size:15px;
+    margin-top:6px;
+    color:var(--ink);
+  }
 
-        /* Ensure content sits above pseudo-elements */
-        .container > * {
-            position: relative;
-            z-index: 1;
-        }
+  #touch{
+    position:absolute;
+    bottom:0; left:0; right:0;
+    z-index:6;
+    display:none;
+    justify-content:space-between;
+    padding:14px 16px 20px;
+  }
+  #touch.show{display:flex;}
+  .tbtn{
+    width:58px;height:58px;
+    border-radius:6px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink);
+    font-size:18px;
+    user-select:none;
+  }
+  .tbtn:active{ background:var(--line); }
+  .tpad{display:flex;gap:10px;}
+  #fireBtn{
+    width:70px;height:58px;
+    color:var(--red);
+    font-family:'Press Start 2P', monospace;
+    font-size:9px;
+  }
 
-        .container:hover {
-            transform: translateY(-8px) scale(1.01);
-            box-shadow:
-                0 0 0 1px rgba(56, 189, 248, 0.15),
-                0 48px 100px -20px rgba(0, 0, 0, 0.8),
-                0 16px 40px -10px rgba(0, 0, 0, 0.5),
-                0 0 80px -20px rgba(56, 189, 248, 0.12),
-                inset 0 1.5px 0 rgba(255, 255, 255, 0.28),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-                inset 1px 0 0 rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.26);
-        }
+  @media (hover:none) and (pointer:coarse){
+    #touch{display:flex;}
+  }
 
-        /* HUD tag */
-        .hud-tag {
-            font-size: 0.65rem;
-            letter-spacing: 4px;
-            color: rgba(56,189,248,0.4);
-            text-transform: uppercase;
-            margin-bottom: 1.5rem;
-            font-family: 'Outfit', monospace;
-            opacity: 0;
-            animation: fadeUp 1s ease forwards 0.2s;
-        }
-
-        h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 5rem;
-            font-weight: 800;
-            letter-spacing: -2px;
-            line-height: 1.05;
-            margin-bottom: 0.6rem;
-            color: #ffffff;
-            cursor: default;
-            will-change: transform;
-            text-shadow:
-                /* crisp white base always readable */
-                0 0 0px #fff,
-                /* soft cyan aura */
-                0 0 20px rgba(56, 189, 248, 0.6),
-                /* wider violet bloom */
-                0 0 50px rgba(129, 140, 248, 0.35),
-                /* deep purple halo for depth */
-                0 0 90px rgba(192, 132, 252, 0.2),
-                /* subtle dark offset for contrast on light bg */
-                1px 2px 8px rgba(0, 0, 0, 0.5);
-            animation: nameGlow 6s ease-in-out infinite alternate;
-        }
-
-        @keyframes nameGlow {
-            0%   {
-                text-shadow:
-                    0 0 0px #fff,
-                    0 0 20px rgba(56, 189, 248, 0.7),
-                    0 0 50px rgba(129, 140, 248, 0.4),
-                    0 0 90px rgba(192, 132, 252, 0.25),
-                    1px 2px 8px rgba(0,0,0,0.5);
-            }
-            50%  {
-                text-shadow:
-                    0 0 0px #fff,
-                    0 0 24px rgba(192, 132, 252, 0.7),
-                    0 0 55px rgba(56, 189, 248, 0.35),
-                    0 0 100px rgba(129, 140, 248, 0.2),
-                    1px 2px 8px rgba(0,0,0,0.5);
-            }
-            100% {
-                text-shadow:
-                    0 0 0px #fff,
-                    0 0 22px rgba(129, 140, 248, 0.7),
-                    0 0 50px rgba(192, 132, 252, 0.4),
-                    0 0 90px rgba(56, 189, 248, 0.2),
-                    1px 2px 8px rgba(0,0,0,0.5);
-            }
-        }
-
-        .subtitle {
-            font-size: 1.1rem;
-            color: #7a90b0;
-            font-weight: 300;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            margin-bottom: 2.5rem;
-            opacity: 0;
-            animation: fadeUp 1s ease forwards 0.5s;
-        }
-
-        .tagline-dynamic {
-            color: var(--accent-1);
-            font-weight: 700;
-            transition: opacity 0.4s ease;
-        }
-
-        /* Divider line */
-        .divider {
-            width: 40px;
-            height: 1px;
-            background: linear-gradient(to right, transparent, rgba(56,189,248,0.5), transparent);
-            margin: 0 auto 2.5rem;
-            opacity: 0;
-            animation: fadeUp 1s ease forwards 0.65s;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 13px 36px;
-            color: rgba(255,255,255,0.9);
-            border: 1px solid rgba(255, 255, 255, 0.22);
-            border-radius: 50px;
-            font-size: 0.85rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            text-decoration: none;
-            transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
-            cursor: none;
-            opacity: 0;
-            animation: fadeUp 1s ease forwards 0.8s;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 300;
-            position: relative;
-            overflow: hidden;
-
-            /* Glass button */
-            background: linear-gradient(
-                135deg,
-                rgba(255,255,255,0.12) 0%,
-                rgba(255,255,255,0.04) 100%
-            );
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            box-shadow:
-                inset 0 1px 0 rgba(255,255,255,0.2),
-                inset 0 -1px 0 rgba(0,0,0,0.1),
-                0 4px 16px rgba(0,0,0,0.25);
-        }
-
-        /* shimmer on hover */
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -75%;
-            width: 50%; height: 100%;
-            background: linear-gradient(
-                105deg,
-                transparent 30%,
-                rgba(255,255,255,0.12) 50%,
-                transparent 70%
-            );
-            transform: skewX(-15deg);
-            transition: left 0.45s ease;
-        }
-
-        .btn:hover::before { left: 130%; }
-
-        .btn:hover {
-            border-color: rgba(56, 189, 248, 0.5);
-            background: linear-gradient(
-                135deg,
-                rgba(56,189,248,0.18) 0%,
-                rgba(129,140,248,0.1) 100%
-            );
-            box-shadow:
-                inset 0 1px 0 rgba(255,255,255,0.25),
-                inset 0 -1px 0 rgba(0,0,0,0.1),
-                0 0 24px rgba(56,189,248,0.25),
-                0 8px 24px rgba(0,0,0,0.3);
-            letter-spacing: 3px;
-            color: #fff;
-        }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Floating orbs behind card */
-        .orb {
-            position: fixed;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 2;
-            filter: blur(60px);
-            animation: orbFloat 12s ease-in-out infinite alternate;
-        }
-        .orb-1 {
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(56,189,248,0.07) 0%, transparent 70%);
-            top: -100px; left: -100px;
-            animation-duration: 14s;
-        }
-        .orb-2 {
-            width: 350px; height: 350px;
-            background: radial-gradient(circle, rgba(192,132,252,0.07) 0%, transparent 70%);
-            bottom: -80px; right: -80px;
-            animation-duration: 10s;
-            animation-delay: -5s;
-        }
-        .orb-3 {
-            width: 250px; height: 250px;
-            background: radial-gradient(circle, rgba(129,140,248,0.05) 0%, transparent 70%);
-            top: 50%; left: 50%;
-            transform: translate(-50%,-50%);
-            animation-duration: 18s;
-            animation-delay: -3s;
-        }
-        @keyframes orbFloat {
-            0%   { transform: translate(0,0) scale(1); }
-            100% { transform: translate(40px, 30px) scale(1.15); }
-        }
-
-        @media (max-width: 768px) {
-            h1 { font-size: 3rem; }
-            .subtitle { font-size: 0.9rem; }
-            .container { padding: 2rem; }
-        }
-    </style>
+  footer.credit{
+    position:fixed;
+    bottom:8px;
+    left:0; right:0;
+    z-index:20;
+    text-align:center;
+    font-size:0.6rem;
+    letter-spacing:2px;
+    color:var(--dim);
+    font-family:'Outfit',monospace;
+  }
+</style>
 </head>
 <body>
 
-    <div id="cursor"></div>
-    <div id="cursor-ring"></div>
-
-    <canvas id="particle-canvas"></canvas>
-
-    <div class="vignette"></div>
-    <div class="grid-overlay"></div>
-
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-
-    <div class="container" id="card">
-        <div class="hud-tag">portfolio · 2025</div>
-        <h1 id="main-name">Rishabh Singh</h1>
-        <p class="subtitle">Creative <span class="tagline-dynamic" id="dynamic-text">Developer</span></p>
-        <div class="divider"></div>
-        <button class="btn" id="cta-btn">Get in Touch</button>
+<div id="stage">
+  <div id="frame">
+    <div id="hud">
+      <div class="col">
+        <div><span class="label">SCORE</span><br><span class="val" id="hudScore">0000</span></div>
+      </div>
+      <div class="col center">
+        <div><span class="label">WAVE</span><br><span class="val" id="hudWave">1</span></div>
+      </div>
+      <div class="col" style="align-items:flex-end;">
+        <div style="text-align:right;"><span class="label">HI-SCORE</span><br><span class="val hi" id="hudHigh">0000</span></div>
+        <div style="text-align:right;"><span class="label">LIVES</span><br><span class="val lives" id="hudLives">▲▲▲</span></div>
+      </div>
     </div>
 
-    <script>
-    /* ── CUSTOM CURSOR ── */
-    const cursor = document.getElementById('cursor');
-    const cursorRing = document.getElementById('cursor-ring');
-    let cx = -100, cy = -100, rx = -100, ry = -100;
+    <canvas id="game"></canvas>
 
-    document.addEventListener('mousemove', e => { cx = e.clientX; cy = e.clientY; });
+    <div class="overlay" id="startScreen">
+      <div class="eyebrow">portfolio · arcade · 2025</div>
+      <h1 class="title">Rishabh Singh</h1>
+      <div class="arcade-title">SPACE INVADERS</div>
+      <p class="sub">Defend the last signal from the descending swarm. Clear a wave to summon the next, faster one.</p>
+      <div class="keys">
+        <span>← →  MOVE</span>
+        <span>SPACE  FIRE</span>
+        <span>ENTER  START</span>
+      </div>
+      <button class="btn" id="startBtn">Press Start</button>
+    </div>
 
-    (function animateCursor() {
-        rx += (cx - rx) * 0.12;
-        ry += (cy - ry) * 0.12;
-        cursor.style.left = cx + 'px';
-        cursor.style.top  = cy + 'px';
-        cursorRing.style.left = rx + 'px';
-        cursorRing.style.top  = ry + 'px';
-        requestAnimationFrame(animateCursor);
-    })();
+    <div class="overlay hidden" id="overScreen">
+      <div class="eyebrow" id="overTag">signal lost</div>
+      <div class="arcade-title" style="color:var(--red);">GAME OVER</div>
+      <div class="stat-row">
+        <div class="stat">SCORE<span class="n" id="finalScore">0</span></div>
+        <div class="stat">HI-SCORE<span class="n" id="finalHigh">0</span></div>
+        <div class="stat">WAVE<span class="n" id="finalWave">1</span></div>
+      </div>
+      <button class="btn" id="retryBtn">Retry</button>
+    </div>
 
-    document.querySelectorAll('button, a').forEach(el => {
-        el.addEventListener('mouseenter', () => {
-            cursor.style.width = '16px';
-            cursor.style.height = '16px';
-            cursor.style.background = 'var(--accent-3)';
-            cursorRing.style.width = '50px';
-            cursorRing.style.height = '50px';
-            cursorRing.style.borderColor = 'rgba(192,132,252,0.5)';
+    <div id="touch">
+      <div class="tpad">
+        <div class="tbtn" id="leftBtn">◀</div>
+        <div class="tbtn" id="rightBtn">▶</div>
+      </div>
+      <div class="tbtn" id="fireBtn">FIRE</div>
+    </div>
+  </div>
+</div>
+
+<footer class="credit">built by rishabh singh</footer>
+
+<script>
+(function(){
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+
+  const hudScore = document.getElementById('hudScore');
+  const hudHigh  = document.getElementById('hudHigh');
+  const hudWave  = document.getElementById('hudWave');
+  const hudLives = document.getElementById('hudLives');
+
+  const startScreen = document.getElementById('startScreen');
+  const overScreen  = document.getElementById('overScreen');
+  const startBtn = document.getElementById('startBtn');
+  const retryBtn = document.getElementById('retryBtn');
+
+  let CW, CH, DPR;
+  function fit(){
+    DPR = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    CW = rect.width; CH = rect.height;
+    canvas.width = CW * DPR;
+    canvas.height = CH * DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+
+  const COLORS = ['#4fc3f7','#5ee6a0','#f5c451','#f4586b'];
+
+  const STORAGE_KEY = 'rs_invaders_highscore';
+  let highScore = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+  hudHigh.textContent = String(highScore).padStart(4,'0');
+
+  let state = 'start';
+  let score = 0, wave = 1, lives = 3;
+  let keys = {};
+  let player, bullets, enemyBullets, enemies;
+  let enemyDir = 1, enemySpeed;
+  let shootCooldown = 0;
+  let lastTime = 0;
+  let flashTimer = 0;
+
+  function resetPlayer(){
+    player = { w: 32, h: 16, x: CW/2 - 16, y: CH - 50, speed: 300, blink: 0 };
+  }
+
+  function buildWave(w){
+    enemies = [];
+    const cols = 8;
+    const rows = Math.min(5, 3 + Math.floor(w/2));
+    const spacingX = Math.min(50, (CW - 60) / cols);
+    const spacingY = 32;
+    const startX = (CW - (cols-1)*spacingX)/2 - 11;
+    const startY = 46;
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        enemies.push({
+          x: startX + c*spacingX,
+          y: startY + r*spacingY,
+          w: 22, h: 16,
+          alive: true,
+          color: COLORS[r % COLORS.length],
+          type: r % 3
         });
-        el.addEventListener('mouseleave', () => {
-            cursor.style.width = '10px';
-            cursor.style.height = '10px';
-            cursor.style.background = 'var(--accent-1)';
-            cursorRing.style.width = '36px';
-            cursorRing.style.height = '36px';
-            cursorRing.style.borderColor = 'rgba(56,189,248,0.4)';
-        });
-    });
+      }
+    }
+    enemySpeed = 24 + w*6;
+    enemyDir = 1;
+  }
 
-    /* ── 3D PARTICLE NETWORK ── */
-    const cv = document.getElementById('particle-canvas');
-    const ctx = cv.getContext('2d');
-    let W, H, pts = [];
-    let rotX = 0.25, rotY = 0.4, velX = 0, velY = 0;
-    let dragging = false, lx = 0, ly = 0;
+  function startGame(){
+    fit();
+    score = 0; wave = 1; lives = 3;
+    bullets = []; enemyBullets = [];
+    resetPlayer();
+    buildWave(wave);
+    updateHud();
+    state = 'playing';
+    startScreen.classList.add('hidden');
+    overScreen.classList.add('hidden');
+    lastTime = performance.now();
+    requestAnimationFrame(loop);
+  }
 
-    const PALETTE = [
-        [0, 200, 255], [80, 140, 255], [0, 255, 200],
-        [120, 80, 255], [56, 189, 248]
-    ];
+  function updateHud(){
+    hudScore.textContent = String(score).padStart(4,'0');
+    hudWave.textContent = String(wave);
+    hudLives.textContent = '▲'.repeat(Math.max(lives,0)) || '—';
+    if(score > highScore){
+      highScore = score;
+      hudHigh.textContent = String(highScore).padStart(4,'0');
+    }
+  }
 
-    function resize() {
-        W = window.innerWidth; H = window.innerHeight;
-        cv.width  = W * devicePixelRatio;
-        cv.height = H * devicePixelRatio;
-        cv.style.width  = W + 'px';
-        cv.style.height = H + 'px';
-        ctx.scale(devicePixelRatio, devicePixelRatio);
+  function playerHit(){
+    lives--;
+    flashTimer = 0.2;
+    updateHud();
+    if(lives <= 0){
+      endGame();
+    } else {
+      player.blink = 1.5;
+      player.x = CW/2 - player.w/2;
+    }
+  }
+
+  function endGame(){
+    state = 'gameover';
+    localStorage.setItem(STORAGE_KEY, String(Math.max(highScore, score)));
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('finalHigh').textContent = Math.max(highScore, score);
+    document.getElementById('finalWave').textContent = wave;
+    overScreen.classList.remove('hidden');
+  }
+
+  function nextWave(){
+    wave++;
+    bullets = []; enemyBullets = [];
+    buildWave(wave);
+    updateHud();
+  }
+
+  window.addEventListener('keydown', e=>{
+    keys[e.code] = true;
+    if(e.code === 'Enter'){
+      if(state === 'start' || state === 'gameover') startGame();
+    }
+    if(['ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+  });
+  window.addEventListener('keyup', e=>{ keys[e.code] = false; });
+
+  startBtn.addEventListener('click', startGame);
+  retryBtn.addEventListener('click', startGame);
+
+  const leftBtn = document.getElementById('leftBtn');
+  const rightBtn = document.getElementById('rightBtn');
+  const fireBtn = document.getElementById('fireBtn');
+  function bindHold(el, key){
+    const on = ev=>{ ev.preventDefault(); keys[key]=true; };
+    const off = ev=>{ ev.preventDefault(); keys[key]=false; };
+    el.addEventListener('touchstart', on, {passive:false});
+    el.addEventListener('touchend', off, {passive:false});
+    el.addEventListener('touchcancel', off, {passive:false});
+    el.addEventListener('mousedown', on);
+    el.addEventListener('mouseup', off);
+    el.addEventListener('mouseleave', off);
+  }
+  bindHold(leftBtn, 'ArrowLeft');
+  bindHold(rightBtn, 'ArrowRight');
+  bindHold(fireBtn, 'Space');
+
+  window.addEventListener('resize', ()=>{ if(state !== 'start') fit(); });
+
+  function loop(now){
+    if(state !== 'playing') return;
+    let dt = (now - lastTime)/1000;
+    if(dt > 0.05) dt = 0.05;
+    lastTime = now;
+    update(dt);
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  function update(dt){
+    if(player.blink > 0) player.blink -= dt;
+    if(keys['ArrowLeft'] || keys['KeyA']) player.x -= player.speed*dt;
+    if(keys['ArrowRight'] || keys['KeyD']) player.x += player.speed*dt;
+    player.x = Math.max(6, Math.min(CW - player.w - 6, player.x));
+
+    shootCooldown -= dt;
+    if(keys['Space'] && shootCooldown <= 0){
+      bullets.push({x: player.x + player.w/2 - 2, y: player.y - 6, w:4, h:10, speed:500});
+      shootCooldown = 0.28;
     }
 
-    function initParticles() {
-        pts = [];
-        const n = Math.min(130, Math.floor(W * H / 8000));
-        for (let i = 0; i < n; i++) {
-            const theta = Math.random() * Math.PI * 2;
-            const phi   = Math.acos(2 * Math.random() - 1);
-            const r     = 0.2 + Math.random() * 0.9;
-            pts.push({
-                ox: r * Math.sin(phi) * Math.cos(theta),
-                oy: r * Math.sin(phi) * Math.sin(theta),
-                oz: r * Math.cos(phi),
-                sz: 1.2 + Math.random() * 2.4,
-                phase:     Math.random() * Math.PI * 2,
-                phaseSpd:  0.008 + Math.random() * 0.018,
-                col: PALETTE[Math.floor(Math.random() * PALETTE.length)]
-            });
+    bullets.forEach(b=> b.y -= b.speed*dt);
+    bullets = bullets.filter(b=> b.y > -20);
+
+    enemyBullets.forEach(b=> b.y += b.speed*dt);
+    enemyBullets = enemyBullets.filter(b=> b.y < CH+20);
+
+    const alive = enemies.filter(e=>e.alive);
+    if(alive.length === 0){ nextWave(); return; }
+
+    let hitEdge = false;
+    const speed = enemySpeed * (1 + (1 - alive.length/enemies.length)*1.3);
+    for(const e of alive){
+      e.x += enemyDir * speed * dt;
+      if(e.x < 10 || e.x + e.w > CW-10) hitEdge = true;
+    }
+    if(hitEdge){
+      enemyDir *= -1;
+      for(const e of alive) e.y += 14;
+    }
+
+    for(const e of alive){
+      if(Math.random() < 0.006 * dt*60){
+        enemyBullets.push({x:e.x+e.w/2-2, y:e.y+e.h, w:4, h:10, speed:200 + wave*10});
+      }
+      if(e.y + e.h >= player.y){ endGame(); return; }
+    }
+
+    for(const b of bullets){
+      for(const e of alive){
+        if(e.alive && rectHit(b,e)){
+          e.alive = false;
+          b.y = -9999;
+          score += (3-e.type)*10 + wave*2;
+          updateHud();
         }
+      }
     }
+    bullets = bullets.filter(b=> b.y > -500);
 
-    function project(x, y, z) {
-        const fov = Math.min(W, H) * 0.65;
-        const cx2 = Math.cos(rotX), sx2 = Math.sin(rotX);
-        const cy2 = Math.cos(rotY), sy2 = Math.sin(rotY);
-        let tx  = cy2 * x + sy2 * z;
-        let tz  = -sy2 * x + cy2 * z;
-        let ty  = cx2 * y - sx2 * tz;
-        let tz2 = sx2 * y + cx2 * tz;
-        const sc = fov / (fov + tz2 * 120 + 200);
-        return { sx: W / 2 + tx * fov * sc, sy: H / 2 + ty * fov * sc, depth: tz2, sc };
-    }
-
-    let bgPhase = 0;
-    function draw() {
-        bgPhase += 0.002;
-        ctx.clearRect(0, 0, W, H);
-
-        /* deep background */
-        const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.8);
-        bg.addColorStop(0, 'rgba(8,16,38,1)');
-        bg.addColorStop(1, 'rgba(4,8,20,1)');
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, W, H);
-
-        /* drifting nebula */
-        const nx = W*0.35 + Math.sin(bgPhase)*60;
-        const ny = H*0.4  + Math.cos(bgPhase*0.7)*40;
-        const neb = ctx.createRadialGradient(nx, ny, 0, W/2, H/2, W*0.65);
-        neb.addColorStop(0,   'rgba(0,100,220,0.06)');
-        neb.addColorStop(0.5, 'rgba(0,180,255,0.03)');
-        neb.addColorStop(1,   'transparent');
-        ctx.fillStyle = neb;
-        ctx.fillRect(0, 0, W, H);
-
-        const proj = pts
-            .map(p => ({ ...p, ...project(p.ox, p.oy, p.oz) }))
-            .sort((a, b) => a.depth - b.depth);
-
-        const maxDist = 0.48;
-
-        /* edges */
-        for (let i = 0; i < proj.length; i++) {
-            for (let j = i + 1; j < proj.length; j++) {
-                const a = proj[i], b = proj[j];
-                const dx = a.ox - b.ox, dy = a.oy - b.oy, dz = a.oz - b.oz;
-                const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-                if (dist < maxDist) {
-                    const t = 1 - dist / maxDist;
-                    const alpha = t * t * 0.5;
-                    const grad = ctx.createLinearGradient(a.sx, a.sy, b.sx, b.sy);
-                    grad.addColorStop(0, `rgba(${a.col[0]},${a.col[1]},${a.col[2]},${alpha})`);
-                    grad.addColorStop(1, `rgba(${b.col[0]},${b.col[1]},${b.col[2]},${alpha})`);
-                    ctx.beginPath();
-                    ctx.moveTo(a.sx, a.sy);
-                    ctx.lineTo(b.sx, b.sy);
-                    ctx.strokeStyle = grad;
-                    ctx.lineWidth = t * 0.9;
-                    ctx.stroke();
-
-                    /* glow edge */
-                    if (t > 0.55) {
-                        const mc = `rgba(${(a.col[0]+b.col[0])>>1},${(a.col[1]+b.col[1])>>1},${(a.col[2]+b.col[2])>>1},${t*0.1})`;
-                        ctx.beginPath();
-                        ctx.moveTo(a.sx, a.sy);
-                        ctx.lineTo(b.sx, b.sy);
-                        ctx.strokeStyle = mc;
-                        ctx.lineWidth = t * 3;
-                        ctx.stroke();
-                    }
-                }
-            }
+    if(player.blink <= 0){
+      for(const b of enemyBullets){
+        if(rectHit(b, player)){
+          b.y = CH+999;
+          playerHit();
         }
-
-        /* nodes */
-        for (const p of proj) {
-            p.phase += p.phaseSpd;
-            const pulse    = 0.78 + 0.22 * Math.sin(p.phase);
-            const depth01  = (p.depth + 1) / 2;
-            const baseAlpha = 0.5 + depth01 * 0.5;
-            const r = Math.max(0.8, p.sz * p.sc * 72 * pulse);
-
-            /* outer halo */
-            const ring = ctx.createRadialGradient(p.sx, p.sy, 0, p.sx, p.sy, r * 4.5);
-            ring.addColorStop(0, `rgba(${p.col[0]},${p.col[1]},${p.col[2]},${0.15 * pulse})`);
-            ring.addColorStop(1, 'transparent');
-            ctx.beginPath();
-            ctx.arc(p.sx, p.sy, r * 4.5, 0, Math.PI * 2);
-            ctx.fillStyle = ring;
-            ctx.fill();
-
-            /* core */
-            const core = ctx.createRadialGradient(p.sx - r*0.3, p.sy - r*0.3, 0, p.sx, p.sy, r);
-            core.addColorStop(0, `rgba(255,255,255,${baseAlpha * 0.9})`);
-            core.addColorStop(0.4, `rgba(${p.col[0]},${p.col[1]},${p.col[2]},${baseAlpha * 0.9})`);
-            core.addColorStop(1, `rgba(${p.col[0]},${p.col[1]},${p.col[2]},0)`);
-            ctx.beginPath();
-            ctx.arc(p.sx, p.sy, r, 0, Math.PI * 2);
-            ctx.fillStyle = core;
-            ctx.fill();
-        }
-
-        /* vignette */
-        const vig = ctx.createRadialGradient(W/2, H/2, H*0.15, W/2, H/2, Math.max(W,H)*0.8);
-        vig.addColorStop(0, 'transparent');
-        vig.addColorStop(1, 'rgba(4,8,20,0.6)');
-        ctx.fillStyle = vig;
-        ctx.fillRect(0, 0, W, H);
+      }
+      enemyBullets = enemyBullets.filter(b=> b.y < CH+500);
     }
 
-    function loop() {
-        velY += 0.000040;
-        velX *= 0.96;
-        velY *= 0.97;
-        if (!dragging) {
-            rotX += velX;
-            rotY += velY;
-        }
-        draw();
-        requestAnimationFrame(loop);
+    if(flashTimer > 0) flashTimer -= dt;
+  }
+
+  function rectHit(a,b){
+    return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+  }
+
+  function render(){
+    ctx.fillStyle = '#0a0e17';
+    ctx.fillRect(0,0,CW,CH);
+
+    if(!(player.blink > 0 && Math.floor(player.blink*10)%2===0)){
+      drawShip(player.x, player.y, player.w, player.h, '#4fc3f7');
     }
 
-    /* drag to rotate */
-    cv.addEventListener('mousedown',  e => { dragging = true;  lx = e.clientX; ly = e.clientY; });
-    cv.addEventListener('mousemove',  e => {
-        if (!dragging) return;
-        velX = (e.clientY - ly) * 0.003;
-        velY = (e.clientX - lx) * 0.003;
-        rotX += velX; rotY += velY;
-        lx = e.clientX; ly = e.clientY;
-    });
-    cv.addEventListener('mouseup',    () => dragging = false);
-    cv.addEventListener('mouseleave', () => dragging = false);
-    cv.addEventListener('touchstart', e => { dragging = true; lx = e.touches[0].clientX; ly = e.touches[0].clientY; }, {passive:true});
-    cv.addEventListener('touchmove',  e => {
-        velX = (e.touches[0].clientY - ly) * 0.003;
-        velY = (e.touches[0].clientX - lx) * 0.003;
-        rotX += velX; rotY += velY;
-        lx = e.touches[0].clientX; ly = e.touches[0].clientY;
-    }, {passive:true});
-    cv.addEventListener('touchend', () => dragging = false);
+    ctx.fillStyle = '#eef2f8';
+    for(const b of bullets) ctx.fillRect(b.x,b.y,b.w,b.h);
+    ctx.fillStyle = '#f5c451';
+    for(const b of enemyBullets) ctx.fillRect(b.x,b.y,b.w,b.h);
 
-    window.addEventListener('resize', () => { resize(); initParticles(); });
+    for(const e of enemies){
+      if(!e.alive) continue;
+      drawAlien(e.x, e.y, e.w, e.h, e.color, e.type);
+    }
 
-    resize();
-    initParticles();
-    loop();
+    if(flashTimer > 0){
+      ctx.fillStyle = `rgba(244,88,107,${flashTimer*0.4})`;
+      ctx.fillRect(0,0,CW,CH);
+    }
+  }
 
-    /* ── GLASS CARD 3D TILT ── */
-    const card = document.getElementById('card');
-    let tiltActive = false;
+  function drawShip(x,y,w,h,color){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x+w/2, y);
+    ctx.lineTo(x+w, y+h);
+    ctx.lineTo(x+w*0.7, y+h*0.7);
+    ctx.lineTo(x+w*0.3, y+h*0.7);
+    ctx.lineTo(x, y+h);
+    ctx.closePath();
+    ctx.fill();
+  }
 
-    card.addEventListener('mouseenter', () => {
-        tiltActive = true;
-        card.style.transition = 'box-shadow 0.3s ease';
-    });
-    card.addEventListener('mouseleave', () => {
-        tiltActive = false;
-        card.style.transform = 'translateY(0) rotateX(0deg) rotateY(0deg) scale(1)';
-        card.style.transition = 'transform 0.6s cubic-bezier(0.23,1,0.32,1), box-shadow 0.5s ease';
-    });
+  function drawAlien(x,y,w,h,color,type){
+    ctx.fillStyle = color;
+    if(type === 0){
+      ctx.fillRect(x+w*0.25,y,w*0.5,h*0.3);
+      ctx.fillRect(x,y+h*0.3,w,h*0.4);
+      ctx.fillRect(x+w*0.1,y+h*0.7,w*0.2,h*0.3);
+      ctx.fillRect(x+w*0.7,y+h*0.7,w*0.2,h*0.3);
+    } else if(type === 1){
+      ctx.fillRect(x+w*0.1,y,w*0.8,h*0.35);
+      ctx.fillRect(x,y+h*0.35,w,h*0.3);
+      ctx.fillRect(x+w*0.2,y+h*0.65,w*0.15,h*0.35);
+      ctx.fillRect(x+w*0.65,y+h*0.65,w*0.15,h*0.35);
+    } else {
+      ctx.beginPath();
+      ctx.arc(x+w/2, y+h/2, w/2, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#0a0e17';
+      ctx.fillRect(x+w*0.3,y+h*0.35,w*0.15,h*0.15);
+      ctx.fillRect(x+w*0.55,y+h*0.35,w*0.15,h*0.15);
+    }
+  }
 
-    document.addEventListener('mousemove', e => {
-        if (!tiltActive) return;
-        const rect = card.getBoundingClientRect();
-        const cx = rect.left + rect.width  / 2;
-        const cy = rect.top  + rect.height / 2;
-        const dx = (e.clientX - cx) / (rect.width  / 2);
-        const dy = (e.clientY - cy) / (rect.height / 2);
-        const tiltX = -dy * 9;
-        const tiltY =  dx * 9;
-        card.style.transform = `translateY(-8px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(1.015)`;
-        card.style.transition = 'transform 0.08s linear';
-    });
-
-    /* ── DYNAMIC TEXT ── */
-    const words = ["Developer", "Designer", "Innovator", "Visionary"];
-    let wordIndex = 0;
-    const dynamicText = document.getElementById('dynamic-text');
-    dynamicText.style.transition = 'opacity 0.4s ease';
-
-    setInterval(() => {
-        wordIndex = (wordIndex + 1) % words.length;
-        dynamicText.style.opacity = 0;
-        setTimeout(() => {
-            dynamicText.textContent = words[wordIndex];
-            dynamicText.style.opacity = 1;
-        }, 420);
-    }, 3000);
-
-    /* ── PARALLAX NAME on mouse ── */
-    const name = document.getElementById('main-name');
-    document.addEventListener('mousemove', e => {
-        const x = (window.innerWidth  / 2 - e.pageX) / 28;
-        const y = (window.innerHeight / 2 - e.pageY) / 28;
-        name.style.transform = `translateX(${x}px) translateY(${y}px)`;
-    });
-
-    /* ── CTA BUTTON ── */
-    document.getElementById('cta-btn').addEventListener('click', function() {
-        this.textContent = 'Say Hello →';
-        this.style.borderColor = 'var(--accent-1)';
-        this.style.color = 'var(--accent-1)';
-        this.style.letterSpacing = '3px';
-    });
-    </script>
+  fit();
+})();
+</script>
 </body>
 </html>
